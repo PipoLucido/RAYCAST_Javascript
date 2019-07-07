@@ -5,6 +5,12 @@ const MAP_NUM_COLUMNS = 15;
 const WINDOW_HEIGHT = MAP_NUM_ROWS * TILE_SIZE;
 const WINDOW_WIDTH = MAP_NUM_COLUMNS * TILE_SIZE;
 
+const FOV_ANGLE = 60 * (Math.PI / 180) ;
+
+const WALL_STRIP_WIDTH = WINDOW_WIDTH;
+const NUM_RAYS = WINDOW_WIDTH / WALL_STRIP_WIDTH;
+
+
 class Map {
     constructor(){
         this.grid = [
@@ -13,10 +19,10 @@ class Map {
             [1,1,1,1,0,0,0,0,0,1,0,0,0,0,1],
             [1,0,0,1,1,0,0,0,0,1,0,0,1,0,1],
             [1,0,1,1,0,0,0,0,0,1,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,0,0,1,0,1,1,1],
+            [1,0,1,0,0,0,0,0,0,0,1,0,1,1,1], 
             [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ];
@@ -91,10 +97,32 @@ class Player {
     }
 }
 
+class Ray {
+
+    constructor(rayAngle){
+        this.rayAngle = rayAngle;
+
+    }
+    render(){
+        stroke("green");
+        line(
+            player.x,
+            player.y,
+            player.x + Math.cos(this.rayAngle) * 20,
+            player.y + Math.sin(this.rayAngle) * 20
+        );
+
+    }
+
+}
+
+
 
 var grid = new Map();
 
 let player = new Player();
+
+let rays = [];
 
 function keyPressed(){
     if(keyCode == UP_ARROW){
@@ -121,16 +149,47 @@ function keyReleased(){
 }
 
 
+function castAllRays(){
+
+    let columnId = 0;
+
+    //EMPIEZA EN EL MEDIO DEL ANGULO
+
+    let rayAngle = player.rotationAngle - (FOV_ANGLE / 2);
+
+    rays = [];
+
+    for(let i = 0 ; i < NUM_RAYS ; i++){
+
+    let ray = new Ray(rayAngle);
+
+    rays.push(ray);
+
+    rayAngle += FOV_ANGLE / NUM_RAYS;
+
+    columnId ++;
+
+    }
+
+
+}
+
+
 function setup(){
     createCanvas(WINDOW_WIDTH,WINDOW_HEIGHT);
 }
 
 function update(){
     player.update();
+    castAllRays();
 }
 
 function draw(){
     update();
     grid.render();
+    for(ray of rays){
+        ray.render();
+    }
+
     player.render();
 }
