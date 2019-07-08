@@ -11,3 +11,15 @@ canvas{
     border-width: 8px;
     border-color: #fff; 
 }
+
+.activarMusica{
+    cursor: pointer;
+    text-align: center;
+    opacity: 0.94;
+    font-family: 'Russo One', sans-serif;
+}
+
+.activarMusica:hover{
+    text-decoration: underline;
+    color: greenyellow
+}

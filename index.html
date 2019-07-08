@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
+        <link href="https://fonts.googleapis.com/css?family=Russo+One&display=swap" rel="stylesheet">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -10,6 +12,17 @@
     <title>RAYCAST</title>
 </head>
 <body>
-    
+   <div onclick="activarMusica()" class="activarMusica" >
+       <p>Activar Musica</p>
+   </div>
 </body>
+
+<script>
+
+    function activarMusica(){
+new Audio('./qui.mp3').play()
+    }
+
+</script>
+
 </html>
