@@ -19,9 +19,13 @@
 
 <script>
 
+let cont = 0;
+
     function activarMusica(){
+        if(cont == 0){
 new Audio('./qui.mp3').play()
-    }
+      cont++;  }    
+}
 
 </script>
 

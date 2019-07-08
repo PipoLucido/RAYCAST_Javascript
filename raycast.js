@@ -7,7 +7,7 @@ const WINDOW_WIDTH = MAP_NUM_COLUMNS * TILE_SIZE;
 
 const FOV_ANGLE = 60 * (Math.PI / 180) ;
 
-const WALL_STRIP_WIDTH = 50;
+const WALL_STRIP_WIDTH = 20;
 const NUM_RAYS = WINDOW_WIDTH / WALL_STRIP_WIDTH;
 
 
@@ -20,9 +20,9 @@ class Map {
             [1,0,0,1,1,0,0,0,0,1,0,0,1,0,1],
             [1,0,1,1,0,0,0,0,0,1,1,0,1,0,1],
             [1,0,1,0,0,0,0,0,0,0,1,0,1,1,1], 
-            [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,0,0,1,0,0,0,0,1,0,0,0,1],
+            [1,0,1,0,0,1,0,0,1,0,0,0,0,0,1],
+            [1,0,1,0,0,1,1,1,1,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ];
@@ -88,21 +88,96 @@ class Player {
         noStroke();
         fill("green");
         circle(this.x,this.y,this.radius);
-        stroke("green");
+        /*stroke("green");
         line(this.x,
             this.y,
             this.x + Math.cos(this.rotationAngle) * 20 ,
             this.y + Math.sin(this.rotationAngle) * 20
-            );
+            );*/
     }
 }
 
 class Ray {
 
     constructor(rayAngle){
-        this.rayAngle = rayAngle;
+        this.rayAngle = normalizeAngle(rayAngle);
+        this.wallHitX = 0;
+        this.wallHitY = 0;
+        this.distance = 0;
+
+        this.isRayFacingDown = this.rayAngle > 0 && this.rayAngle < Math.PI ;
+        this.isRayFacingUp = !this.isRayFacingDown;
+
+        this.isRayFacingRight =  this.rayAngle < 0.5 * Math.PI || this.rayAngle > 1.5 * Math.PI ;
+        this.isRayFacingLeft = !this.isRayFacingRight;
+    }
+    cast(columnId){
+        let xintercep, yintercep;
+        let xstep, ystep;
+        /////////////////////////////////////////////
+        //     INTERSECCION HORIZONTAL RAY GRID    //
+        /////////////////////////////////////////////
+
+        let findHorizontalWallHit = false;
+        let wallHitxx = 0;
+        let wallHityy = 0;
+
+
+//        console.log("is ray facing right ? : " +this.isRayFacingRight)
+
+  //      console.log("is ray facing left ? : " +this.isRayFacingLeft)
+
+        //encuentra la cordenada Y de la intersecion gorizontal mas cercana 
+        yintercep = Math.floor(player.y / TILE_SIZE) * TILE_SIZE;
+        yintercep += this.isRayFacingDown ? TILE_SIZE : 0; //SI ESTA APUNTANDO ABAJO SE SUMA 32 PORQUE NO ESTA APUNTANDO PARA ARRIBA QUE ARRIBA Y VALE CERO, ENTONCES ABAJO Y VALE 32
+
+
+
+        //encuentra la cordenada Y de la intersecion horizontal mas cercana
+        xintercep = player.x + (yintercep - player.y) / Math.tan(this.rayAngle);
+
+        //calcular incremento para xstep y ystep
+
+        ystep = TILE_SIZE;
+
+        ystep *= this.isRayFacingUp ? -1 : 1;
+
+
+        xstep = TILE_SIZE/Math.tan(this.rayAngle)
+
+        xstep *= (this.isRayFacingLeft && xstep > 0  ) ? -1 : 1;
+        xstep *= (this.isRayFacingRight && xstep < 0) ? -1 : 1;
+
+        let nextHorizontalTouchX = xintercep;
+        let nextHorizontalTouchY = yintercep;
+
+        if(this.isRayFacingUp){
+            nextHorizontalTouchY --;
+        }
+
+        while(nextHorizontalTouchX >= 0 && nextHorizontalTouchX <= WINDOW_WIDTH && nextHorizontalTouchY >=0 && nextHorizontalTouchY <= WINDOW_HEIGHT){
+        if(grid.hasWallAt(nextHorizontalTouchX,nextHorizontalTouchY)){
+
+            //encontramos una coliccion con el ray
+                findHorizontalWallHit = true;
+                wallHitxx = nextHorizontalTouchX;
+                wallHityy = nextHorizontalTouchY;
+
+                stroke("green")
+
+                line(player.x,player.y,wallHitxx,wallHityy)
+
+                break;
+        }else{
+            //seguimos el incremento
+            nextHorizontalTouchX += xstep;
+            nextHorizontalTouchY += ystep;
+
+        }
 
     }
+    }
+
     render(){
         stroke("green");
         line(
@@ -163,6 +238,8 @@ function castAllRays(){
 
     let ray = new Ray(rayAngle);
 
+    ray.cast(columnId);
+
     rays.push(ray);
 
     rayAngle += FOV_ANGLE / NUM_RAYS;
@@ -174,6 +251,17 @@ function castAllRays(){
 
 }
 
+function normalizeAngle(angle){
+
+    angle = angle % (2 * Math.PI);
+
+    if(angle < 0){
+        angle = (2 * Math.PI ) + angle;
+    }
+
+    return angle;
+
+}
 
 function setup(){
     createCanvas(WINDOW_WIDTH,WINDOW_HEIGHT);
@@ -181,15 +269,16 @@ function setup(){
 
 function update(){
     player.update();
-    castAllRays();
+    
 }
 
 function draw(){
     update();
     grid.render();
-    for(ray of rays){
+   /* for(ray of rays){
         ray.render();
-    }
+    }*/
 
     player.render();
+    castAllRays();
 }
